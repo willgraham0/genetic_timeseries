@@ -13,14 +13,14 @@ class Point(NamedTuple):
 class TimeSeries:
     """A chronologically ordered iterable of Points."""
 
-    def __init__(self, points):
+    def __init__(self, points) -> None:
         self.points = tuple(
             Point(*point)
             for point in sorted(points, key=lambda x: x.time)
         )
 
     @property
-    def area(self):
+    def area(self) -> float:
         """Return the area under the time series."""
         return (
             sum(
