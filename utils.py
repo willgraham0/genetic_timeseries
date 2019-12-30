@@ -13,8 +13,8 @@ def pairwise(iterable):
     return zip(a, b)
 
 
-def generate_sp_range(start: datetime, end: datetime) -> List[float]:
-    """Returns a list of half hourly settlement period timestamps between start and end."""
+def generate_hh_range(start: datetime, end: datetime) -> List[datetime]:
+    """Returns a list of half hourly date-times between start and end."""
     step = timedelta(minutes=30)
-    sp_count = int((end - start).total_seconds() / step.seconds)
-    return [(start + step * sp).timestamp() for sp in range(0, sp_count)]
+    hh_count = int((end - start).total_seconds() / step.seconds)
+    return [(start + step * hh) for hh in range(0, hh_count)]
