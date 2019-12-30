@@ -71,3 +71,8 @@ class Environment(Generic[C]):
 
         self._population = new_population
 
+    def _mutate(self) -> None:
+        """Mutate each individual in the population with `_mutate_chance` probability."""
+        for individual in self._population:
+            if random() < self._mutation_chance:
+                individual.mutate()
