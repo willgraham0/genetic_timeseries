@@ -72,7 +72,28 @@ class Environment(Generic[C]):
         self._population = new_population
 
     def _mutate(self) -> None:
-        """Mutate each individual in the population with `_mutate_chance` probability."""
+        """Mutate each individual in the population with `mutate_chance` probability."""
         for individual in self._population:
             if random() < self._mutation_chance:
                 individual.mutate()
+
+    def run(self) -> C:
+        """Return the best individual that is found after `max_generations`."""
+        best = max(self._population, key=self._fitness_key)
+        for generation in range(self._max_generations):
+            if best.fitness() >= self._threshold:
+                return best
+
+            print(
+                f"Generation {generation} Best {best.fitness()} "
+                f"Ave {mean(individual.fitness() for individual in self._population)}"
+            )
+
+            self._reproduce_and_replace()
+            self._mutate()
+
+            highest = max(self._population, key=self._fitness_key)
+            if highest.fitness() > best.fitness():
+                best = highest
+
+        return best
