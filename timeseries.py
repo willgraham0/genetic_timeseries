@@ -1,13 +1,20 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import NamedTuple
+from math import sqrt
 
 from utils import pairwise
 
 
-class Point(NamedTuple):
-    """A tuple of datetime and value."""
-    time: datetime
-    value: float
+class Point:
+    """A datetime and value representation."""
+
+    def __init__(self, time: datetime, value: float):
+        self.time = time
+        self.value = value
+
+    def distance(self, other: Point):
+        """Return a value that represents the vector distance between two points."""
+        return sqrt(((self.time - other.time).total_seconds())**2 + (self.value - other.value)**2)
 
 
 class TimeSeries:
