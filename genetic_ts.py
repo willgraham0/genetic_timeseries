@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 
 from environment import Environment
 from timeseries import Point
@@ -9,9 +9,19 @@ from replicator import Replicator
 
 class GeneticTimeSeries(Replicator):
 
-    ideal: GeneticTimeSeries = None
+    ideal: List[Point] = None
 
+    @classmethod
+    def is_configured(cls, func):
+        if not cls.ideal:
+            raise ValueError("This class must be configured before an instance can be created.")
+        return func
+
+    @is_configured
     def __init__(self, points) -> None:
+        if len(points) != len(self.ideal):
+            raise ValueError("The number of points is not the same as in the ideal time series.")
+
         self.points = tuple(
             Point(*point)
             for point in sorted(points, key=lambda x: x.time)
@@ -37,19 +47,9 @@ class GeneticTimeSeries(Replicator):
         """Return the earliest time in the genetic time series."""
         return min(point.time for point in self.points)
 
-    @classmethod
-    def configure(cls, ideal: GeneticTimeSeries) -> None:
-        cls.ideal = ideal
-
-    @classmethod
-    def is_configured(cls, func):
-        if not cls.ideal:
-            raise ValueError("This class must be configured before this method can be called.")
-        return func
-
-    @is_configured
     def fitness(self) -> float:
-        pass
+        """Return the maximum of the distances between elbow points of this time series and the ideal."""
+        return max(p1.distance(p2) for p1, p2 in zip(self.ideal, self.points))
 
     def mutate(self) -> None:
         pass
@@ -60,6 +60,10 @@ class GeneticTimeSeries(Replicator):
     @classmethod
     def random_instance(cls: Type[GeneticTimeSeries]) -> GeneticTimeSeries:
         pass
+
+    @classmethod
+    def configure(cls, ideal: List[Point]) -> None:
+        cls.ideal = ideal
 
 
 if __name__ == "__main__":
