@@ -49,7 +49,7 @@ class Environment(Generic[C]):
         """Replace the population with a new generation of individuals."""
         new_population: List[C] = []
 
-        # Continue until the new generation is the same size of the previous.
+        # Continue until the new generation is the same size as the previous.
         while len(new_population) < len(self._population):
             # Pick the 2 parents.
             if self._selection_type == SelectionType.ROULETTE:
