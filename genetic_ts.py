@@ -48,8 +48,9 @@ class GeneticTimeSeries(Replicator):
 
     @is_configured
     def fitness(self) -> float:
-        """Return the maximum of the distances between elbow points of this time series and the ideal."""
-        return max(p1.distance(p2) for p1, p2 in zip(self.ideal.points, self.points))
+        """Return the reciprocal of the maximum of the distances between elbow points of this time series and the ideal.
+        """
+        return 1 / max(p1.distance(p2) for p1, p2 in zip(self.ideal.points, self.points))
 
     def mutate(self) -> None:
         """Modify the value and time of each point in the time series using a Gaussian distribution."""
