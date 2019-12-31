@@ -88,6 +88,22 @@ class GeneticTimeSeries(Replicator):
 
 
 if __name__ == "__main__":
+    # Goal
+    ideal = GeneticTimeSeries(
+        [
+            (datetime(2019, 1, 1, 9), 0),
+            (datetime(2019, 1, 1, 9, 30), 0),
+            (datetime(2019, 1, 1, 9, 30), 0),
+            (datetime(2019, 1, 1, 10), 0),
+            (datetime(2019, 1, 1, 10), 0),
+            (datetime(2019, 1, 1, 10, 30), 0),
+        ]
+    )
+
+    # Set goal.
+    GeneticTimeSeries.configure(ideal)
+
+    # Start evolution.
     initial_population = [GeneticTimeSeries.random_instance() for _ in range(20)]
     natural_selection = Environment(
         initial_population=initial_population,
@@ -97,4 +113,10 @@ if __name__ == "__main__":
         crossover_chance=0.7
     )
     result = natural_selection.run()
-    print(result)
+
+    print("Ideal")
+    for i in ideal.points:
+        print(i)
+    print("Result")
+    for j in result.points:
+        print(j)
