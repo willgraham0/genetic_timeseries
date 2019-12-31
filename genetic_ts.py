@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 from random import gauss, randint
 
 from environment import Environment
@@ -14,17 +14,11 @@ class GeneticTimeSeries(Replicator):
 
     ideal: GeneticTimeSeries = None
 
-    def __init__(self, points) -> None:
+    def __init__(self, points: List[Point]) -> None:
         if self.ideal:
             if len(points) != len(self.ideal.points):
                 raise ValueError("The number of points is not the same as in the ideal time series.")
-        self.points = tuple(Point(*point) for point in sorted(points, key=lambda x: x.time))
-
-    @classmethod
-    def is_configured(cls, func):
-        if not cls.ideal:
-            raise ValueError("This class must be configured before an instance can be created.")
-        return func
+        self.points = list(sorted(points, key=lambda x: x.time))
 
     @property
     def max_value(self) -> float:
@@ -46,10 +40,11 @@ class GeneticTimeSeries(Replicator):
         """Return the earliest time in the genetic time series."""
         return min(point.time for point in self.points)
 
-    @is_configured
     def fitness(self) -> float:
         """Return the reciprocal of the maximum of the distances between elbow points of this time series and the ideal.
         """
+        if not self.ideal:
+            raise ValueError("This class must be configured before an instance can be created.")
         return 1 / max(p1.distance(p2) for p1, p2 in zip(self.ideal.points, self.points))
 
     def mutate(self) -> None:
@@ -57,7 +52,7 @@ class GeneticTimeSeries(Replicator):
         sig = 0.1
         for point in self.points:
             point.value = gauss(point.value, sig)
-            point.time += datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
+            point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
 
     def crossover(self, other: GeneticTimeSeries) -> Tuple[GeneticTimeSeries, GeneticTimeSeries]:
         """Create children by mixing datetimes and values."""
@@ -75,12 +70,16 @@ class GeneticTimeSeries(Replicator):
         return child1, child2
 
     @classmethod
-    @is_configured
     def random_instance(cls: Type[GeneticTimeSeries]) -> GeneticTimeSeries:
         """Return a random genetic time series that had times and values within the time and value ranges of `ideal`."""
-        time = random_datetime(cls.ideal.earliest_time, cls.ideal.latest_time)
-        value = randint(cls.ideal.min_value, cls.ideal.max_value)
-        return cls((time, value) for _ in range(len(cls.ideal.points)))
+        if not cls.ideal:
+            raise ValueError("This class must be configured before an instance can be created.")
+        new_points = []
+        for _ in range(len(cls.ideal.points)):
+            time = random_datetime(cls.ideal.earliest_time, cls.ideal.latest_time)
+            value = randint(cls.ideal.min_value, cls.ideal.max_value)
+            new_points.append(Point(time, value))
+        return cls(new_points)
 
     @classmethod
     def configure(cls, ideal: GeneticTimeSeries) -> None:
@@ -89,33 +88,33 @@ class GeneticTimeSeries(Replicator):
 
 if __name__ == "__main__":
     # Goal
-    ideal = GeneticTimeSeries(
+    goal = GeneticTimeSeries(
         [
-            (datetime(2019, 1, 1, 9), 0),
-            (datetime(2019, 1, 1, 9, 30), 0),
-            (datetime(2019, 1, 1, 9, 30), 0),
-            (datetime(2019, 1, 1, 10), 0),
-            (datetime(2019, 1, 1, 10), 0),
-            (datetime(2019, 1, 1, 10, 30), 0),
+            Point(datetime(2019, 1, 1, 9), 0),
+            Point(datetime(2019, 1, 1, 9, 30), 0),
+            Point(datetime(2019, 1, 1, 9, 30), 10),
+            Point(datetime(2019, 1, 1, 10), 10),
+            Point(datetime(2019, 1, 1, 10), 0),
+            Point(datetime(2019, 1, 1, 10, 30), 0),
         ]
     )
 
     # Set goal.
-    GeneticTimeSeries.configure(ideal)
+    GeneticTimeSeries.configure(goal)
 
     # Start evolution.
-    initial_population = [GeneticTimeSeries.random_instance() for _ in range(20)]
+    initial_population = [GeneticTimeSeries.random_instance() for _ in range(100)]
     natural_selection = Environment(
         initial_population=initial_population,
         threshold=13.0,
-        max_generations=100,
+        max_generations=1000,
         mutation_chance=0.1,
         crossover_chance=0.7
     )
     result = natural_selection.run()
 
     print("Ideal")
-    for i in ideal.points:
+    for i in goal.points:
         print(i)
     print("Result")
     for j in result.points:
