@@ -2,7 +2,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime
 from typing import Tuple, Type
-from random import randint
+from random import gauss, randint
 
 from environment import Environment
 from timeseries import Point
@@ -52,18 +52,22 @@ class GeneticTimeSeries(Replicator):
         return max(p1.distance(p2) for p1, p2 in zip(self.ideal.points, self.points))
 
     def mutate(self) -> None:
-        pass
+        """Modify the value and time of each point in the time series using a Gaussian distribution."""
+        sig = 0.1
+        for point in self.points:
+            point.value = gauss(point.value, sig)
+            point.time += datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
 
     def crossover(self, other: GeneticTimeSeries) -> Tuple[GeneticTimeSeries, GeneticTimeSeries]:
         """Create children by mixing datetimes and values."""
         father, mother = self, other
         child1 = deepcopy(father)
         child2 = deepcopy(mother)
-        # Child 1 (clone of father) gets values of mother.
+        # Child 1 (initially a clone of the father) gets values of mother.
         for point in mother.points:
             for child1_point in child1.points:
                 child1_point.value = point.value
-        # Child 2 (clone of mother) gets values of father.
+        # Child 2 (initially a clone of the mother) gets values of father.
         for point in father.points:
             for child2_point in child2.points:
                 child2_point.time = point.time
