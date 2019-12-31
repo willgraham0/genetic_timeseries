@@ -1,6 +1,7 @@
 from __future__ import annotations
+from copy import deepcopy
 from datetime import datetime
-from typing import List, Tuple, Type
+from typing import Tuple, Type
 from random import randint
 
 from environment import Environment
@@ -54,7 +55,19 @@ class GeneticTimeSeries(Replicator):
         pass
 
     def crossover(self, other: GeneticTimeSeries) -> Tuple[GeneticTimeSeries, GeneticTimeSeries]:
-        pass
+        """Create children by mixing datetimes and values."""
+        father, mother = self, other
+        child1 = deepcopy(father)
+        child2 = deepcopy(mother)
+        # Child 1 (clone of father) gets values of mother.
+        for point in mother.points:
+            for child1_point in child1.points:
+                child1_point.value = point.value
+        # Child 2 (clone of mother) gets values of father.
+        for point in father.points:
+            for child2_point in child2.points:
+                child2_point.time = point.time
+        return child1, child2
 
     @classmethod
     @is_configured
