@@ -5,7 +5,7 @@ from typing import List, Tuple, Type
 from random import gauss, randint
 
 from environment import Environment
-from timeseries import Point
+from point import Point
 from replicator import Replicator
 from utils import random_datetime
 
@@ -49,7 +49,7 @@ class GeneticTimeSeries(Replicator):
 
     def mutate(self) -> None:
         """Modify the value and time of each point in the time series using a Gaussian distribution."""
-        sig = 0.1
+        sig = 1.2
         for point in self.points:
             point.value = gauss(point.value, sig)
             point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
@@ -63,7 +63,7 @@ class GeneticTimeSeries(Replicator):
         for point in mother.points:
             for child1_point in child1.points:
                 child1_point.value = point.value
-        # Child 2 (initially a clone of the mother) gets values of father.
+        # Child 2 (initially a clone of the mother) gets times of father.
         for point in father.points:
             for child2_point in child2.points:
                 child2_point.time = point.time
@@ -87,14 +87,14 @@ class GeneticTimeSeries(Replicator):
 
 
 if __name__ == "__main__":
-    # Goal
+    # Goal.
     goal = GeneticTimeSeries(
         [
             Point(datetime(2019, 1, 1, 9), 0),
-            Point(datetime(2019, 1, 1, 9, 30), 0),
+            Point(datetime(2019, 1, 1, 9, 15), 5),
             Point(datetime(2019, 1, 1, 9, 30), 10),
             Point(datetime(2019, 1, 1, 10), 10),
-            Point(datetime(2019, 1, 1, 10), 0),
+            Point(datetime(2019, 1, 1, 10, 15), 5),
             Point(datetime(2019, 1, 1, 10, 30), 0),
         ]
     )
@@ -106,10 +106,10 @@ if __name__ == "__main__":
     initial_population = [GeneticTimeSeries.random_instance() for _ in range(100)]
     natural_selection = Environment(
         initial_population=initial_population,
-        threshold=13.0,
+        threshold=0.9,
         max_generations=1000,
-        mutation_chance=0.1,
-        crossover_chance=0.7
+        mutation_chance=0.8,
+        crossover_chance=0.8
     )
     result = natural_selection.run()
 
