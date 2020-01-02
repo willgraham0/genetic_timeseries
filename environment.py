@@ -2,8 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from heapq import nlargest
 from random import choices, random
-from statistics import mean
-from typing import TypeVar, Generic, List, Tuple, Callable
+from typing import TypeVar, Generator, Generic, List, Tuple, Callable
 
 from replicator import Replicator
 
@@ -77,23 +76,14 @@ class Environment(Generic[C]):
             if random() < self._mutation_chance:
                 individual.mutate()
 
-    def run(self) -> C:
-        """Return the best individual that is found after `max_generations`."""
-        best = max(self._population, key=self._fitness_key)
+    def run(self) -> Generator[C, None, None]:
+        """Yield the best individual that is found in each generation."""
         for generation in range(self._max_generations):
-            if best.fitness() >= self._threshold:
-                return best
+            best = max(self._population, key=self._fitness_key)
+            yield best
 
-            print(
-                f"Generation {generation} Best {best.fitness()} "
-                f"Ave {mean(individual.fitness() for individual in self._population)}"
-            )
+            if best.fitness() >= self._threshold:
+                return
 
             self._reproduce_and_replace()
             self._mutate()
-
-            highest = max(self._population, key=self._fitness_key)
-            if highest.fitness() > best.fitness():
-                best = highest
-
-        return best
