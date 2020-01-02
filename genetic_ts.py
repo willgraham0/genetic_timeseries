@@ -26,6 +26,12 @@ class GeneticTimeSeries(Replicator):
                 raise ValueError("The number of points is not the same as in the ideal time series.")
         self.points = self._order_points(points)
 
+    def __str__(self):
+        return f"points={self.points}"
+
+    def __repr__(self):
+        return f"GTS(points={self.points})"
+
     @staticmethod
     def _order_points(points: List[Point]) -> List[Point]:
         return list(sorted(points, key=lambda x: x.time))
@@ -70,8 +76,8 @@ class GeneticTimeSeries(Replicator):
     def mutate(self) -> None:
         """Modify the value and time of each point in the time series using a Gaussian distribution."""
         for point in self.points:
-            point.value = gauss(point.value, 0.9)
-            point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), 100))
+            point.value = gauss(point.value, 0.5)
+            point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), 0.5))
         self.points = self._order_points(self.points)
 
     def crossover(self, other: GeneticTimeSeries) -> Tuple[GeneticTimeSeries, GeneticTimeSeries]:
