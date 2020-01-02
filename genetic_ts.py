@@ -24,7 +24,11 @@ class GeneticTimeSeries(Replicator):
         if self.ideal:
             if len(points) != len(self.ideal.points):
                 raise ValueError("The number of points is not the same as in the ideal time series.")
-        self.points = list(sorted(points, key=lambda x: x.time))
+        self.points = self._order_points(points)
+
+    @staticmethod
+    def _order_points(points: List[Point]) -> List[Point]:
+        return list(sorted(points, key=lambda x: x.time))
 
     @property
     def times(self) -> List[datetime]:
@@ -65,10 +69,10 @@ class GeneticTimeSeries(Replicator):
 
     def mutate(self) -> None:
         """Modify the value and time of each point in the time series using a Gaussian distribution."""
-        sig = 0.9
         for point in self.points:
-            point.value = gauss(point.value, sig)
-            point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
+            point.value = gauss(point.value, 0.9)
+            point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), 100))
+        self.points = self._order_points(self.points)
 
     def crossover(self, other: GeneticTimeSeries) -> Tuple[GeneticTimeSeries, GeneticTimeSeries]:
         """Create children by mixing datetimes and values."""
@@ -155,13 +159,9 @@ if __name__ == "__main__":
         ax.set_xlabel(label)
         return line, ax
 
-    # FuncAnimation will call the 'update' function for each frame;
-    # with an interval of 20ms between frames.
     anim = FuncAnimation(fig, update, frames=len(results), interval=20)
     if len(sys.argv) > 1 and sys.argv[1] == 'save':
         print("saving...")
         anim.save('evolution.gif', dpi=60, writer='imagemagick')
     else:
-        # plt.show() will just loop the animation forever.
         plt.show()
-
