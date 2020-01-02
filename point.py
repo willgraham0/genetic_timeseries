@@ -15,4 +15,7 @@ class Point:
         return sqrt(((self.time - other.time).total_seconds())**2 + (self.value - other.value)**2)
 
     def __str__(self):
-        return f"<Point: time={self.time} value={self.value}>"
+        return f"time={self.time} value={self.value}"
+
+    def __repr__(self):
+        return f"Point(time={self.time} value={self.value})"
