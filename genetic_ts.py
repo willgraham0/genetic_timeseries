@@ -1,8 +1,14 @@
 from __future__ import annotations
+
+import sys
 from copy import deepcopy
 from datetime import datetime
+from itertools import chain
 from typing import List, Tuple, Type
 from random import gauss, randint
+
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 from environment import Environment
 from point import Point
@@ -19,6 +25,16 @@ class GeneticTimeSeries(Replicator):
             if len(points) != len(self.ideal.points):
                 raise ValueError("The number of points is not the same as in the ideal time series.")
         self.points = list(sorted(points, key=lambda x: x.time))
+
+    @property
+    def times(self) -> List[datetime]:
+        """Return all datetimes of points in the time series."""
+        return [point.time for point in self.points]
+
+    @property
+    def values(self) -> List[float]:
+        """Return all values of points in the time series."""
+        return [point.value for point in self.points]
 
     @property
     def max_value(self) -> float:
@@ -49,7 +65,7 @@ class GeneticTimeSeries(Replicator):
 
     def mutate(self) -> None:
         """Modify the value and time of each point in the time series using a Gaussian distribution."""
-        sig = 1.2
+        sig = 0.9
         for point in self.points:
             point.value = gauss(point.value, sig)
             point.time = datetime.fromtimestamp(gauss(point.time.timestamp(), sig))
@@ -60,9 +76,9 @@ class GeneticTimeSeries(Replicator):
         child1 = deepcopy(father)
         child2 = deepcopy(mother)
         # Child 1 (initially a clone of the father) gets values of mother.
-        for point in mother.points:
-            for child1_point in child1.points:
-                child1_point.value = point.value
+        # for point in mother.points:
+        #     for child1_point in child1.points:
+        #         child1_point.value = point.value
         # Child 2 (initially a clone of the mother) gets times of father.
         for point in father.points:
             for child2_point in child2.points:
@@ -87,7 +103,7 @@ class GeneticTimeSeries(Replicator):
 
 
 if __name__ == "__main__":
-    # Goal.
+    # Create the goal.
     goal = GeneticTimeSeries(
         [
             Point(datetime(2019, 1, 1, 9), 0),
@@ -99,23 +115,53 @@ if __name__ == "__main__":
         ]
     )
 
-    # Set goal.
+    # Set the goal.
     GeneticTimeSeries.configure(goal)
 
-    # Start evolution.
+    # Set up the plot.
+    fig, ax = plt.subplots()
+    fig.set_tight_layout(True)
+
+    # Plot the goal that persists.
+    x = goal.times
+    y = goal.values
+    ax.plot(x, y, 'r-', linewidth=1)
+
+    # Execute the genetic algorithm.
     initial_population = [GeneticTimeSeries.random_instance() for _ in range(100)]
     natural_selection = Environment(
         initial_population=initial_population,
-        threshold=0.9,
+        threshold=1,
         max_generations=1000,
         mutation_chance=0.8,
-        crossover_chance=0.8
+        crossover_chance=0.6
     )
-    result = natural_selection.run()
+    results = list(natural_selection.run())
 
-    print("Ideal")
-    for i in goal.points:
-        print(i)
-    print("Result")
-    for j in result.points:
-        print(j)
+    # Set the x and y bounds of the plot.
+    all_times = list(chain.from_iterable(result.times for result in results))
+    all_values = list(chain.from_iterable(result.values for result in results))
+    ax.set_ylim(min(all_values), max(all_values))
+    ax.set_xlim(min(all_times), max(all_times))
+    ax.grid(True)
+
+    # Plot the first best result.
+    first = results[0]
+    line, = ax.plot(first.times, first.values, linewidth=1)
+
+    def update(i):
+        label = 'Generation {0}'.format(i)
+        line.set_ydata(results[i].values)
+        ax.set_xlabel(label)
+        return line, ax
+
+    # FuncAnimation will call the 'update' function for each frame;
+    # with an interval of 20ms between frames.
+    anim = FuncAnimation(fig, update, frames=len(results), interval=20)
+    if len(sys.argv) > 1 and sys.argv[1] == 'save':
+        print("saving...")
+        anim.save('evolution.gif', dpi=60, writer='imagemagick')
+    else:
+        # plt.show() will just loop the animation forever.
+        plt.show()
+
