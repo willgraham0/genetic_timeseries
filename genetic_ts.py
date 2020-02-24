@@ -85,11 +85,6 @@ class GeneticTimeSeries(Replicator):
         father, mother = self, other
         child1 = deepcopy(father)
         child2 = deepcopy(mother)
-        # Child 1 (initially a clone of the father) gets values of mother.
-        # for point in mother.points:
-        #     for child1_point in child1.points:
-        #         child1_point.value = point.value
-        # Child 2 (initially a clone of the mother) gets times of father.
         for point in father.points:
             for child2_point in child2.points:
                 child2_point.time = point.time
