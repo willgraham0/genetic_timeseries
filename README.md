@@ -11,10 +11,21 @@ generation of randomly generated time series.
  
 ## The Algorithm
 
-## Methodology
+### Methodology
 
 The time series object we are building is a `GeneticTimeSeries`. It is
 composed of `Point` objects specifying a `datetime` and a value. 
+
+We will create a random collection, or "generation", of these time series 
+objects and select the most suitable to create a subsequent generation. 
+We will repeat this process for a large number of generations.
+
+For each generation the selection process involves picking those instances
+that have the best fitness. This fitness is defined as the reciprocal of 
+the maximum distance between each `Point` with the corresponding `Point`
+of the target `GeneticTimeSeries`. From those selected, we create the next
+generation through the following processes: cloning, crossover and
+mutation, each with their own probabilities of occurrence.  
 
 ### Executing the Algorithm
 
@@ -90,10 +101,14 @@ generation given the environmental conditions defined above.
 ![evolution_gif]
 
 After approximately the 875th generation the derived time series
-resembles the target quite well and remains stable thereafter. 
-
-## Conclusion
+resembles the target quite well and remains stable thereafter.
  
+## Conclusion
+
+Although this exercise is academic in the sense that we have already
+defined the target and are measuring fitness against it, it nevertheless
+is employing the principles of a genetic algorithm to modify and select
+"fit" instances to gradually converge towards a good solution.
  
 ## References
 
